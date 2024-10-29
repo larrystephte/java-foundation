@@ -1,0 +1,34 @@
+plugins {
+    id 'java'
+}
+
+allprojects {
+
+    group = 'com.onebilliongod.foundation'
+    version = '1.0.0-SNAPSHOT'
+    sourceCompatibility  = JavaVersion.VERSION_21
+//    targetCompatibility = '21'
+//    java {
+//        toolchain {
+//            languageVersion = JavaLanguageVersion.of(21)
+//        }
+//    }
+
+    repositories {
+        mavenCentral()
+    }
+//    repositories {
+//        maven {
+//            url 'http://maven.other.com/content/groups/group-snapshot/'
+//            mavenContent {
+//                snapshotsOnly()
+//            }
+//        }
+//        maven {
+//            url 'http://maven.other.com/content/groups/group-release/'
+//            mavenContent {
+//                releasesOnly()
+//            }
+//        }
+//    }
+}

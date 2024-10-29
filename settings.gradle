@@ -1,0 +1,29 @@
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+
+rootProject.name = 'foundation'
+include 'foundation-commons','foundation-commons:commons-core', 'foundation-framework', 'foundation-initializr'
+
+//pluginManagement {
+//    repositories {
+//        maven {
+//            url 'http://maven.other.com/content/groups/group-snapshot/'
+//            mavenContent {
+//                snapshotsOnly()
+//            }
+//        }
+//        maven {
+//            url 'http://maven.other.com/content/groups/group-release/'
+//            mavenContent {
+//                releasesOnly()
+//            }
+//        }
+//    }
+//}
+
