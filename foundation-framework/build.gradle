@@ -20,6 +20,18 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-autoconfigure'
         implementation 'org.springframework.boot:spring-boot-actuator'
 
+        compileOnly 'org.projectlombok:lombok:1.18.32'
+        annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+        implementation 'org.slf4j:slf4j-api:2.0.14'
+        implementation 'ch.qos.logback:logback-classic:1.5.3'
+
+        implementation 'org.apache.commons:commons-lang3:3.15.0'
+
+        implementation project(path: ':foundation-commons:commons-core')
+
+//        testImplementation 'org.mockito:mockito-inline:5.14.0'
+        testImplementation 'org.mockito:mockito-core:5.14.0'
         testImplementation platform('org.junit:junit-bom:5.9.1')
         testImplementation 'org.junit.jupiter:junit-jupiter'
     }

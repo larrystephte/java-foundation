@@ -1,5 +1,7 @@
 package com.onebilliongod.foundation.framework.springboot.core;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -14,11 +16,14 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.ResourcePropertySource;
 import org.springframework.lang.NonNull;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ResourceUtils;
+import org.springframework.core.io.Resource;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import org.springframework.util.StringUtils;
 
 /**
  * The main purpose of this class is to scan custom annotations on Bean definitions, parse these annotations, extract configuration information from them,
@@ -31,6 +36,8 @@ public abstract class AnnotationPropertySourcePostProcessor<A extends Annotation
     protected ResourceLoader resourceLoader;
 
     protected ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
+
+    protected final Log logger = LogFactory.getLog(getClass());
 
     @Override
     public void setEnvironment(Environment environment) {
@@ -134,4 +141,23 @@ public abstract class AnnotationPropertySourcePostProcessor<A extends Annotation
     }
 
     public abstract List<String> sourceNames();
+
+    protected String resolveLocation(String location) {
+        String _location = this.environment.resolveRequiredPlaceholders(location);
+        if (!_location.contains(":")) {
+            return ResourceUtils.CLASSPATH_URL_PREFIX + _location;
+        }
+        return _location;
+    }
+
+    protected static String getResourceName(String name, Resource resource) {
+        if (StringUtils.hasText(name)) {
+            return name;
+        }
+        String description =  resource.getDescription();
+        if (StringUtils.hasText(description)) {
+            return description;
+        }
+        return resource.getClass().getSimpleName() + "@" + System.identityHashCode(resource);
+    }
 }
