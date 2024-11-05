@@ -33,8 +33,8 @@ public final class SelectorLocalizer {
 
         Map<String, Object> container = new HashMap<>();
         Map<String, Map<String, Map<String, Object>>> selector = new HashMap<>();
-
         // Process each property
+
         for (String key : properties.stringPropertyNames()) {
             if (!key.startsWith(SELECTOR_PREFIX)) {
                 // Directly add non-selector properties

@@ -19,7 +19,6 @@ public final class ContextEnvironmentTool {
     public static final String PROFILE = "profile";
     public static final String CLOUD = "cloud";
     public static final String NAMESPACE_APPLICATION = "spring.application";
-    public static final String PREFER_PROFILE = "prefer-profile";
 
     /**
      * Retrieves the current profile from the environment.
@@ -32,7 +31,6 @@ public final class ContextEnvironmentTool {
      */
     public static String profile(final Environment environment) {
         String source = getProfileProperty(environment);
-
         if (source == null) {
             String[] profiles = getActiveOrDefaultProfiles(environment);
             source = profiles.length > 0 ? profiles[profiles.length - 1] : DEFAULT_GROUP_NAME; // Default to "default" if no profiles found
@@ -46,10 +44,33 @@ public final class ContextEnvironmentTool {
     // Retrieves the profile property from the environment
     private static String getProfileProperty(Environment environment) {
         String source = environment.getProperty(PROFILE);
-        if (source == null) {
-            source = environment.getProperty(NAMESPACE_APPLICATION + "." + PREFER_PROFILE);
-        }
         return source;
+    }
+
+    /**
+     * Retrieves the group that the current running service belongs to.
+     *
+     * The profile is assumed to have the structure: ${env}-${group}, where ${env} is the environment, and ${group} is the service group.
+     * @param environment
+     * @return
+     */
+    public static String group(final Environment environment) {
+        //Attempt to retrieve the service group from the configuration property "foundation.service.group"
+        final String group = environment.getProperty("foundation.service.group");
+        if (StringUtils.isNotBlank(group)) {
+            return group;
+        }
+        String[] profiles = environment.getActiveProfiles();
+        if (profiles.length < 1) {
+            return DEFAULT_GROUP_NAME;
+        }
+        // The active profile is expected to follow the structure: ${env}-${group}
+        final String[] strings = StringUtils.split(profiles[0], "-",2);
+        if (strings == null || strings.length != 2) {
+            return DEFAULT_GROUP_NAME;
+        }
+
+        return strings[1];
     }
 
     // Gets active profiles or defaults if none are active
@@ -107,4 +128,6 @@ public final class ContextEnvironmentTool {
         }
         return "default"; // Fallback to default
     }
+
+
 }

@@ -1,0 +1,4 @@
+_selector_:
+  pre:
+    aws:
+      test: test

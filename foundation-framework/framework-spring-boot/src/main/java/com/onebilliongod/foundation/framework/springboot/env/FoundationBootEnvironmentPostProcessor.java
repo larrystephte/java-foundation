@@ -1,11 +1,15 @@
 package com.onebilliongod.foundation.framework.springboot.env;
 
+
 import com.onebilliongod.foundation.framework.springboot.utils.ContextEnvironmentTool;
 import com.onebilliongod.foundation.framework.springboot.utils.SelectorLocalizer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.io.Resource;
@@ -29,8 +33,10 @@ import java.util.*;
  * </p>
  */
 @Slf4j
-public abstract class FoundationBootEnvironmentPostProcessor implements EnvironmentPostProcessor, ResourceLoaderAware, Ordered {
+public class FoundationBootEnvironmentPostProcessor implements EnvironmentPostProcessor, ResourceLoaderAware, Ordered {
     private ResourceLoader resourceLoader;
+
+    private static final String YAML_FILE_EXTENSION = ".yml";
 
     /**
      * Returns the name of the property source based on the class name.
@@ -39,19 +45,35 @@ public abstract class FoundationBootEnvironmentPostProcessor implements Environm
         return this.getClass().getName();
     }
 
+    private static final List<String> resourcePaths = new LinkedList<>();
+
+    static {
+        //.properties or .yml
+        resourcePaths.add("classpath*:/foundation-*-boot.*");
+    }
+
     /**
      * Locates properties based on the current environment's profile and cloud configuration.
-     *
+     * _selector_.${env}.${cloud}
+     * _selector_.prod.aws.consul.http:
      */
     protected MapPropertySource locateProperties(Environment environment) {
         Map<String, Object> container = new HashMap<>();
         String profile = ContextEnvironmentTool.profile(environment);
         String cloud = ContextEnvironmentTool.cloud(environment);
         try {
-            Collection<EncodedResource> resources = getResourcePatternResolver(getResourcePaths());
+            Collection<EncodedResource> resources = getResourcePatternResolver(resourcePaths);
+            Properties properties;
             for (EncodedResource item : resources) {
-                Properties properties = PropertiesLoaderUtils.loadProperties(item);
-                log.info("Loading profile：" + item.getResource().getFilename());
+                //Check if the resource file is a YAML file; if so ,use the YAML Loading method;
+                //otherwise, use the Properties Loading method.
+                if (Objects.requireNonNull(item.getResource().getFilename()).endsWith(YAML_FILE_EXTENSION)) {
+                    properties = loadYaml(item.getResource());
+                } else {
+                    properties = PropertiesLoaderUtils.loadProperties(item);
+                }
+
+                log.info("Loading profile：" + item.getResource().getFilename() + "," + properties.propertyNames());
                 container.putAll(SelectorLocalizer.localize(properties, profile, cloud));
             }
         } catch (IOException e) {
@@ -62,6 +84,18 @@ public abstract class FoundationBootEnvironmentPostProcessor implements Environm
             throw new IllegalStateException("Unexpected error during property loading.", e);
         }
         return new MapPropertySource(getPropertySourceName(), container);
+    }
+
+    /**
+     *  The YAML Loading method
+     * @param resource
+     * @return
+     */
+    public Properties loadYaml(Resource resource) {
+        YamlPropertiesFactoryBean yamlFactory = new YamlPropertiesFactoryBean();
+//        Resource resource = new ClassPathResource(path);
+        yamlFactory.setResources(resource);
+        return yamlFactory.getObject();
     }
 
     /**
@@ -80,14 +114,22 @@ public abstract class FoundationBootEnvironmentPostProcessor implements Environm
     }
 
     @Override
+    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+        final MapPropertySource mapPropertySource = locateProperties(environment);
+        final Map<String, Object> source = mapPropertySource.getSource();
+
+        source.keySet().removeIf(environment::containsProperty);
+
+        //Add the property at the end to ensure it can be overwritten by previous EnvironmentPostProcessors.
+        environment.getPropertySources().addLast(mapPropertySource);
+    }
+
+
+    @Override
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
     }
 
-    /**
-     * Returns the list of resource paths that need to be resolved.
-     */
-    protected abstract List<String> getResourcePaths();
 
     @Override
     public int getOrder() {
