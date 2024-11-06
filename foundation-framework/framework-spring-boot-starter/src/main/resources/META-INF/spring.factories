@@ -1,0 +1,4 @@
+## env
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.onebilliongod.foundation.framework.springboot.env.FoundationBootEnvironmentPostProcessor
+

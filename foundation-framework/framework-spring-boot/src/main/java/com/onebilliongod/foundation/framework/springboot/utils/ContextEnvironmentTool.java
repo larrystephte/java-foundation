@@ -2,6 +2,7 @@ package com.onebilliongod.foundation.framework.springboot.utils;
 
 
 import com.onebilliongod.foundation.commons.core.net.NetworkUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.springframework.core.env.Environment;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,19 +19,19 @@ public final class ContextEnvironmentTool {
     public static final String DEFAULT_CHARSET = "UTF-8";
     public static final String PROFILE = "profile";
     public static final String CLOUD = "cloud";
-    public static final String NAMESPACE_APPLICATION = "spring.application";
 
     /**
      * Retrieves the current profile from the environment.
      * <p>
      * The profile can be specified directly or inferred from the hostname and active profiles.
+     * 比如业务线比较繁忙，同一个服务的不同分支，同时部署测试。那么使用group区分不同测试分支，或者叫不同服务组。这么设计也有利于后续的云平台部署。
      * </p>
      *
      * @param environment The Spring Environment object.
      * @return The determined profile, or "default" if none is found.
      */
     public static String profile(final Environment environment) {
-        String source = getProfileProperty(environment);
+        String source = environment.getProperty(PROFILE);
         if (source == null) {
             String[] profiles = getActiveOrDefaultProfiles(environment);
             source = profiles.length > 0 ? profiles[profiles.length - 1] : DEFAULT_GROUP_NAME; // Default to "default" if no profiles found
@@ -41,16 +42,11 @@ public final class ContextEnvironmentTool {
         return strings[0]; // Return the environment part
     }
 
-    // Retrieves the profile property from the environment
-    private static String getProfileProperty(Environment environment) {
-        String source = environment.getProperty(PROFILE);
-        return source;
-    }
-
     /**
      * Retrieves the group that the current running service belongs to.
      *
      * The profile is assumed to have the structure: ${env}-${group}, where ${env} is the environment, and ${group} is the service group.
+     *
      * @param environment
      * @return
      */
@@ -129,5 +125,19 @@ public final class ContextEnvironmentTool {
         return "default"; // Fallback to default
     }
 
+    /**
+     * determines if the current environment is a desktop environment.
+     * This check distinguishes between desktop and server environments
+     * based on the operating system and desktop session environment variables.
+     * @return true: a desktop environment false: server environments
+     */
+    public static boolean isDesktopEnv() {
+        if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_MAC) {
+            return true;
+        }
+        //https://unix.stackexchange.com/questions/78210/how-do-i-find-the-running-gui-environment-from-the-terminal
+        return StringUtils.isNotBlank(System.getenv("XDG_CURRENT_DESKTOP")) ||
+                StringUtils.isNotBlank(System.getenv("DESKTOP_SESSION"));
+    }
 
 }

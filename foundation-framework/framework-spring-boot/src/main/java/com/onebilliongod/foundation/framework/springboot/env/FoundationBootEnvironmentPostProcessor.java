@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Abstract base class for processing environment properties in a Spring Boot application.
+ * base class for processing environment properties in a Spring Boot application.
  * <p>
  * This class implements the EnvironmentPostProcessor interface to allow custom property
  * sources to be added to the application's environment during startup.

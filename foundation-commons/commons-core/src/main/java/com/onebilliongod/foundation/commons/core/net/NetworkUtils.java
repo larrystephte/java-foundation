@@ -13,9 +13,6 @@ import java.util.TreeMap;
  * Utility class for network-related operations.
  */
 public final class NetworkUtils {
-    public static final String HOST_NAME_SP_KEY = "HOST_NAME";
-    public static final String LOCAL_IP_SP_KEY = "LOCAL_IP";
-
     private static final String LOCAL_HOST_NAME = "localhost";
     private static final String LOCAL_HOST_IP = "127.0.0.1";
 

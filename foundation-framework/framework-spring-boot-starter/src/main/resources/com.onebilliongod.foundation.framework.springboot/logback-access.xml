@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="default"/>
+    <springProperty scope="context" name="logDir" source="logging.file.path" defaultValue="logs"/>
+    <property name="pattern" value="%date{yyyy-MM-dd HH:mm:ss.SSS}|%reqAttribute{X-Request-Id}|%reqAttribute{X-Trace-Id}|%reqAttribute{localIp}|%clientHost|%threadName|%requestMethod|%requestURI|%statusCode|%elapsedTime|%bytesSent|%i{X-Forwarded-For}|%i{User-Agent}|%i{Referer}" />
+    <define name="isDesktopEnv" class="com.onebilliongod.foundation.framework.springboot.log.DesktopPropertyDefiner" />
+    <if condition='${isDesktopEnv}'>
+        <then>
+            <appender name="ACCESS-LOG" class="ch.qos.logback.core.ConsoleAppender">
+                <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
+                    <evaluator class="ch.qos.logback.access.net.URLEvaluator">
+                        <URL>/actuator/prometheus</URL>
+                        <URL>/actuator/health</URL>
+                        <URL>/favicon.ico</URL>
+                        <name>URLEvaluator</name>
+                    </evaluator>
+                    <OnMismatch>NEUTRAL</OnMismatch>
+                    <OnMatch>DENY</OnMatch>
+                </filter>
+                <encoder>
+                    <pattern>${pattern}</pattern>
+                </encoder>
+            </appender>
+        </then>
+        <else>
+            <appender name="ACCESS-LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${logDir}/access/access.log</file>
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${logDir}/access/archive/${appName}_access_%d{yyyy-MM-dd}_%i.gz</fileNamePattern>
+                    <maxFileSize>56MB</maxFileSize>
+                    <maxHistory>15</maxHistory>
+                    <totalSizeCap>8GB</totalSizeCap>
+                </rollingPolicy>
+                <encoder>
+                    <pattern>${pattern}</pattern>
+                </encoder>
+            </appender>
+        </else>
+    </if>
+    <appender-ref ref="ACCESS-LOG"/>
+</configuration>
+
+
+

@@ -1,30 +1,23 @@
 package com.onebilliongod.foundation.framework.springboot.environment;
 
+import com.onebilliongod.foundation.commons.core.common.Constants;
+import com.onebilliongod.foundation.commons.core.net.NetworkUtils;
 import com.onebilliongod.foundation.framework.springboot.utils.ContextEnvironmentTool;
 import com.onebilliongod.foundation.framework.springboot.utils.K8SUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.RandomStringUtils;
+
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
-import org.springframework.util.Assert;
+
 
 import static com.onebilliongod.foundation.framework.springboot.utils.ContextEnvironmentTool.DEFAULT_CHARSET;
 
@@ -68,6 +61,13 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
 
         //resolve logging environment varies
         resolveLogging(environment);
+
+        //
+//        resolvePath(environment);
+
+        resolveSpring(environment);
+
+
     }
 
     /**
@@ -77,8 +77,8 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
      */
     private void resolveLogging(ConfigurableEnvironment environment) {
         // Set logback configuration files
-        lastSourcePut(environment, "logging.config", "classpath:com/onebilliongod/foundation/framework/springboot/logback-meteor.xml");
-        lastSourcePut(environment, "logback.access.config", "classpath:com/onebilliongod/foundation/framework/springboot/logback-meteor-access.xml");
+        lastSourcePut(environment, "logging.config", "classpath:com/onebilliongod/foundation/framework/springboot/logback.xml");
+        lastSourcePut(environment, "logback.access.config", "classpath:com/onebilliongod/foundation/framework/springboot/logback-access.xml");
 
         //Set log file path based on the environment
         lastSourcePut(environment, "logging.file.path", buildLoggingPath(environment));
@@ -92,6 +92,109 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
         lastSourcePut(environment, "logging.logback.rollingpolicy.total-size-cap", "12GB");
         lastSourcePut(environment, "logging.charset.file", DEFAULT_CHARSET);//官方default为UTF8
         lastSourcePut(environment, "logging.charset.console", DEFAULT_CHARSET);//官方default为UTF8
+    }
+
+    private void resolveFramework(final ConfigurableEnvironment environment) {
+        String localIp = NetworkUtils.getLocalIp();
+        if (localIp == null) {
+            throw new IllegalStateException("The framework could not resolve the local IP address (IPv4). Please review the hosts configuration!");
+        }
+        lastSourcePut(environment, Constants.LOCAL_IP, localIp);
+
+
+        String hostName = NetworkUtils.getHostName();
+        if (hostName == null) {
+            throw new IllegalStateException("The framework could not resolve the local hostname. Please review the hosts configuration!");
+        }
+        lastSourcePut(environment, Constants.HOST_NAME, hostName);
+
+        String profile = ContextEnvironmentTool.profile(environment);
+        if (profile.isEmpty()) {
+            throw new IllegalStateException("The current service environment cannot be determined. Please set the Spring active profile.");
+        }
+
+        String applicationName = environment.getProperty("spring.application.name");
+        if (StringUtils.isBlank(applicationName)) {
+            throw new IllegalArgumentException("Please configure spring.application.name");
+        }
+
+        lastSourcePut(environment, "spring.banner.location", "banner.txt");
+    }
+
+//    private void resolvePath(final ConfigurableEnvironment environment) {
+//        String catalinaBase = environment.getProperty("catalina.base");
+//        if (catalinaBase == null) {
+//            catalinaBase = ".";
+//        }
+//        firstSource.put("catalina.base", catalinaBase);
+//        System.setProperty("catalina.base", catalinaBase);
+//        firstSource.put("server.tomcat.basedir", catalinaBase);
+//
+//
+//        String runtimeBase = environment.getProperty("runtime.base");
+//        if (runtimeBase == null) {
+//            runtimeBase = catalinaBase + "/runtime";
+//        }
+//        PathUtils.ensureDirectory(runtimeBase);
+//        firstSource.put("runtime.base", runtimeBase);
+//        System.setProperty("runtime.base", runtimeBase);
+//
+//
+//        String dataBase = environment.getProperty("data.base");
+//        if (dataBase == null) {
+//            dataBase = catalinaBase + "/data";
+//        }
+//        PathUtils.ensureDirectory(dataBase);
+//        firstSource.put("data.base", dataBase);
+//        System.setProperty("data.base", dataBase);
+//    }
+
+    private void resolveSpring(final ConfigurableEnvironment environment) {
+
+        boolean debug = environment.getProperty("debug", Boolean.class, false);
+        System.setProperty("DEBUG", "" + debug);
+
+        //覆盖默认的spring配置，如果未指定的话
+        firstSource.put("spring.jmx.enabled", true);
+        firstSource.put("spring.jmx.default-domain", "com.onebilliongod.foundation");
+
+//        lastSourcePut(environment, "spring.aop.auto", true);
+//        lastSourcePut(environment, "spring.aop.proxy-target-class", true);
+
+//        lastSourcePut(environment, "spring.http.encoding.charset", DEFAULT_CHARSET);
+//        lastSourcePut(environment, "spring.http.encoding.enabled", true);
+
+//        lastSourcePut(environment, "spring.jackson.time-zone", "GMT+08:00");
+//        lastSourcePut(environment, "spring.jackson.serialization.write-dates-as-timestamps", true);
+
+        lastSourcePut(environment, "spring.transaction.default-timeout", "30S");
+
+        //Whether to wait for the TaskExecutor to complete current tasks when the application shuts down. By default, this feature is disabled. If you need to wait for tasks to complete, set this option to true.
+        lastSourcePut(environment, "spring.task.execution.shutdown.await-termination", true);
+        lastSourcePut(environment, "spring.task.execution.shutdown.await-termination-period", "3S");
+        lastSourcePut(environment, "spring.task.scheduling.shutdown.await-termination", true);
+        lastSourcePut(environment, "spring.task.scheduling.shutdown.await-termination-period", "3S");
+    }
+
+    private void resolveServer(final ConfigurableEnvironment environment) {
+        String port = environment.getProperty("port");
+        if (port == null) {
+            port = environment.getProperty("server.port");
+        }
+        if (port == null) {
+            port = "8080";
+        }
+
+        firstSource.put("server.shutdown", "graceful");//平滑下线
+        lastSourcePut(environment, "spring.lifecycle.timeout-per-shutdown-phase", "15S");
+        lastSourcePut(environment, "server.port", port);
+        lastSourcePut(environment, "server.compression.enabled", false);
+
+        //安全考虑
+        lastSourcePut(environment, "server.max-http-header-size", "8KB");
+
+
+
     }
 
     /**

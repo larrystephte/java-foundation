@@ -1,0 +1,104 @@
+server:
+  port: 8080
+  shutdown: graceful
+  compression:
+    enabled: true
+  max-http-header-size: 8KB
+  tomcat:
+    uri-encoding: UTF-8
+    accept-count: 50
+    mbeanregistry:
+      enabled: true
+    accesslog:
+      enabled: false
+    connection-timeout: 5000ms
+    max-connections: 1000
+    max-http-form-post-size: 1MB
+    threads:
+      max: 50
+      min-spare: 5
+
+spring:
+  banner:
+    location: banner.txt
+  lifecycle:
+    timeout-per-shutdown-phase: 15S
+  task:
+    execution:
+      shutdown:
+        await-termination: true
+        await-termination-period: 3S
+    scheduling:
+      shutdown:
+        await-termination: true
+        await-termination-period: 3S
+  jmx:
+    enabled: true
+    default-domain: com.onebilliongod.foundation
+  transaction:
+    default-timeout: 30S
+
+logging:
+  config: classpath:com/onebilliongod/foundation/framework/springboot/logback.xml
+  file:
+    path: /data/logs/${spring.application.name}/${K8S_NAMESPACE:default}-${HOSTNAME:default}/${profile}-${group}
+  group:
+    foundation: com.onebilliongod.foundation.framework.springboot,com.onebilliongod.foundation.framework.springcloud
+  level:
+    foundation: INFO
+    org:
+      springframework:
+        context:
+          support: WARN
+  logback:
+    rollingpolicy:
+      max-history: 3
+      max-file-size: 128MB
+      total-size-cap: 12GB
+  charset:
+    file: UTF-8
+    console: UTF-8
+
+logback:
+  access:
+    config: classpath:com/onebilliongod/foundation/framework/springboot/logback-access.xml
+
+management:
+  health:
+    defaults:
+      enabled: false
+  info:
+    build:
+      enabled: true
+    git:
+      enabled: true
+  endpoints:
+    enabled-by-default: true
+    httptrace:
+      enabled: true
+    beans:
+      enabled: true
+    configprops:
+      enabled: true
+    env:
+      enabled: true
+    mappings:
+      enabled: true
+    info:
+      enabled: true
+    web:
+      base-path: /wnd5o5
+      exposure:
+        include: *
+    health:
+      enabled: true
+      show-details: never
+      show-components: always
+      cache:
+        time-to-live: 1s
+    jmx:
+      domain: com.onebilliongod.foundation
+      exposure:
+        include: *
+
+
