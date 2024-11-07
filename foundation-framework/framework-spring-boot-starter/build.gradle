@@ -4,4 +4,5 @@ plugins {
 
 dependencies {
     implementation project(path: ':foundation-framework:framework-spring-boot')
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

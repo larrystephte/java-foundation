@@ -24,7 +24,9 @@ public final class ContextEnvironmentTool {
      * Retrieves the current profile from the environment.
      * <p>
      * The profile can be specified directly or inferred from the hostname and active profiles.
-     * 比如业务线比较繁忙，同一个服务的不同分支，同时部署测试。那么使用group区分不同测试分支，或者叫不同服务组。这么设计也有利于后续的云平台部署。
+     * For a busy business line, different branches of the same service might be deployed simultaneously for testing.
+     * Using "group" to distinguish different testing branches (or service groups) can help organize deployments.
+     * This approach also supports future deployments on cloud platforms.
      * </p>
      *
      * @param environment The Spring Environment object.
@@ -56,12 +58,18 @@ public final class ContextEnvironmentTool {
         if (StringUtils.isNotBlank(group)) {
             return group;
         }
-        String[] profiles = environment.getActiveProfiles();
-        if (profiles.length < 1) {
-            return DEFAULT_GROUP_NAME;
+        String profile = environment.getProperty(PROFILE);
+        if (StringUtils.isBlank(profile)) {
+            String[] profiles = environment.getActiveProfiles();
+            if (profiles == null || profiles.length < 1) {
+                return DEFAULT_GROUP_NAME;
+            } else {
+                profile = profiles[0];
+            }
         }
+
         // The active profile is expected to follow the structure: ${env}-${group}
-        final String[] strings = StringUtils.split(profiles[0], "-",2);
+        final String[] strings = StringUtils.split(profile, "-",2);
         if (strings == null || strings.length != 2) {
             return DEFAULT_GROUP_NAME;
         }
@@ -72,7 +80,7 @@ public final class ContextEnvironmentTool {
     // Gets active profiles or defaults if none are active
     private static String[] getActiveOrDefaultProfiles(Environment environment) {
         String[] profiles = environment.getActiveProfiles();
-        if (profiles.length == 0) {
+        if (profiles == null || profiles.length == 0) {
             String hostName = NetworkUtils.getHostName();
             profiles = inferProfilesFromHostName(hostName);
         }

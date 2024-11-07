@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false">
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="default"/>
+    <springProperty scope="context" name="logDir" source="logging.file.path" defaultValue="logs"/>
+    <!--Formatted output: %d represents the date, %thread represents the thread name, %-5level displays the log level with a width of 5 characters aligned to the left, %msg is the log message, and %n is the newline character.-->
+    <property name="pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{localIp}|%X{requestId}|%X{traceId}|%thread|%-5level|%logger{50}|%line|%msg%n" />
+
+    <define name="isDesktopEnv" class="com.onebilliongod.foundation.framework.springboot.log.DesktopPropertyDefiner" />
+
+    <!--In desktop environments, logs are printed directly to the console for easier testing.-->
+    <if condition='${isDesktopEnv}'>
+        <then>
+            <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <pattern>${pattern}</pattern>
+                </encoder>
+            </appender>
+            <root level="INFO">
+                <appender-ref ref="STDOUT"/>
+            </root>
+        </then>
+        <else>
+            <!--File logs are generated daily, with a new log file created each day. -->
+            <appender name="FRAMEWORK-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <file>${logDir}/server.log</file>
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${logDir}/archive/${appName}_%d{yyyy-MM-dd}_%i.gz</fileNamePattern>
+                    <maxFileSize>256MB</maxFileSize>
+                    <maxHistory>15</maxHistory>
+                    <totalSizeCap>64GB</totalSizeCap>
+                </rollingPolicy>
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <pattern>${pattern}</pattern>
+                </encoder>
+
+            </appender>
+            <appender name="FRAMEWORK-ERROR-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                    <level>ERROR</level>
+                </filter>
+                <file>${logDir}/error.log</file>
+                <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                    <fileNamePattern>${logDir}/archive/${appName}_error_%d{yyyy-MM-dd}_%i.gz</fileNamePattern>
+                    <maxFileSize>128MB</maxFileSize>
+                    <maxHistory>15</maxHistory>
+                    <totalSizeCap>16GB</totalSizeCap>
+                </rollingPolicy>
+                <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                    <pattern>${pattern}</pattern>
+                </encoder>
+            </appender>
+
+            <appender name="ASYNC-METEOR-FILE" class="ch.qos.logback.classic.AsyncAppender">
+                <appender-ref ref="METEOR-FILE" />
+                <neverBlock>true</neverBlock>
+                <queueSize>500</queueSize>
+                <includeCallerData>true</includeCallerData>
+            </appender>
+
+            <appender name="ASYNC-METEOR-ERROR-FILE" class="ch.qos.logback.classic.AsyncAppender">
+                <appender-ref ref="METEOR-ERROR-FILE" />
+                <neverBlock>true</neverBlock>
+                <queueSize>100</queueSize>
+                <includeCallerData>true</includeCallerData>
+            </appender>
+
+            <root level="INFO">
+                <appender-ref ref="ASYNC-METEOR-FILE"/>
+                <appender-ref ref="ASYNC-METEOR-ERROR-FILE"/>
+            </root>
+        </else>
+    </if>
+</configuration>
+
+
+
