@@ -1,5 +1,6 @@
 package com.onebilliongod.foundation.framework.springboot.environment;
 
+import com.onebilliongod.foundation.commons.core.common.Constants;
 import com.onebilliongod.foundation.commons.core.net.NetworkUtils;
 import com.onebilliongod.foundation.framework.springboot.utils.ContextEnvironmentTool;
 import com.onebilliongod.foundation.framework.springboot.utils.K8SUtil;
@@ -82,23 +83,26 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
 
         //resolve profile
         String profile = ContextEnvironmentTool.profile(environment);
-        if (StringUtils.isBlank(profile)) {
-            throw new IllegalStateException("The current service environment cannot be determined. Please set the Spring active profile.");
-        }
-        predefinedVariables.put("profile", profile);
-        System.setProperty("profile", profile);
+        predefinedVariables.put(Constants.PROFILE, profile);
+        System.setProperty(Constants.PROFILE, profile);
 
         //resolve group
         String group = ContextEnvironmentTool.group(environment);
-        if (!StringUtils.isBlank(group)) {
-            predefinedVariables.put("group", group);
-        }
+        predefinedVariables.put(Constants.GROUP, group);
+        System.setProperty(Constants.GROUP, group);
 
         //check the  applicationName
         String applicationName = environment.getProperty("spring.application.name");
         if (StringUtils.isBlank(applicationName)) {
             throw new IllegalArgumentException("Please configure spring.application.name");
         }
+        predefinedVariables.put(Constants.PROJECT, applicationName);
+        System.setProperty(Constants.PROJECT, applicationName);
+
+        //check the cloud
+        String cloud = ContextEnvironmentTool.cloud(environment);
+        System.setProperty(Constants.CLOUD, cloud);
+        predefinedVariables.put(Constants.CLOUD, applicationName);
 
         //resolve the  k8sNamespace
         String k8sNamespace = environment.getProperty("K8S_NAMESPACE");

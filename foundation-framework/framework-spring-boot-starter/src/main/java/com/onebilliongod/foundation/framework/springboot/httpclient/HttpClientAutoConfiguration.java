@@ -7,6 +7,7 @@ import feign.RequestInterceptor;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
+import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
@@ -27,30 +28,48 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 
 @Configuration
 @EnableAutoConfiguration
 @ConfigurationProperties(prefix = "http.client")
 public class HttpClientAutoConfiguration {
     // Configuration properties
+    // Whether to use OkHttp client,the other client is httpClients
     private boolean useOkHttp = true;
 
-    private int connectTimeout = 150;
+    // The maximum wait time for the client to establish a connection to the server. If the connection cannot be established within the specified time, a timeout exception will be thrown.
+    private int connectTimeout = 500;
+
+    // The maximum wait time to read data from the server. If no response is received within this time, a timeout exception will be thrown.
     private int readTimeout = 2000;
-    private int writeTimeout = 500;
 
-    private long keepAliveDuration = 6000;
+    // The maximum wait time to write request data to the server. If the data is not written within this time, a timeout exception will be thrown.
+    private int writeTimeout = 1000;
 
-    private int maxIdleConnections = 5;
+    // The time that a connection will be kept idle in the connection pool. If the connection is not reused within this time, it will be closed.
+    private long keepAliveDuration = 10000;
 
+    // The maximum number of idle connections allowed in the connection pool.
+    private int maxIdleConnections = 10;
+
+    // The maximum number of connections allowed in the Apache HttpClient connection pool.
     private int maxTotalConnections = 200;
 
+    // Number of retry attempts for requests
+    private int retry_times = 3;
+
+    // Additional headers to be included in requests
+    private Map<String, String> additionalHeaders;
 
     // OkHttp Client configuration
     @Bean
     @ConditionalOnProperty(name = "http.client.useOkHttp", havingValue = "true", matchIfMissing = true)
     public OkHttpClient okHttpClient() {
+        // Create a connection pool with specified max idle connections and keep-alive duration
         ConnectionPool connectionPool = new ConnectionPool(maxIdleConnections, keepAliveDuration, TimeUnit.MILLISECONDS);
         return new OkHttpClient.Builder()
                 .connectionPool(connectionPool)
@@ -64,23 +83,25 @@ public class HttpClientAutoConfiguration {
     @Bean
     @ConditionalOnProperty(name = "http.client.useOkHttp", havingValue = "false")
     public CloseableHttpClient apacheHttpClient() {
+        // Create a connection manager for the Apache HttpClient
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(maxTotalConnections);
-        connectionManager.setDefaultMaxPerRoute(16); //2^4
+        connectionManager.setMaxTotal(maxTotalConnections); // Set the maximum number of total connections
+        connectionManager.setDefaultMaxPerRoute(16); // Set the maximum number of connections per route (2^4)
         connectionManager.setDefaultConnectionConfig(ConnectionConfig.custom()
                 .setConnectTimeout(Timeout.ofMilliseconds(connectTimeout))
                 .setSocketTimeout(Timeout.ofMilliseconds(readTimeout))
                 .setTimeToLive(Timeout.ofMilliseconds(keepAliveDuration))
-                .setValidateAfterInactivity(Timeout.ofSeconds(5))
+                .setValidateAfterInactivity(Timeout.ofSeconds(5)) // Validate connections after 5 seconds of inactivity
                 .build());
 
         return HttpClients.custom()
+                .setRetryStrategy(new DefaultHttpRequestRetryStrategy(retry_times, TimeValue.ofMilliseconds(1000))) // Set retry strategy, retry_times with 1000ms interval
                 .setConnectionManager(connectionManager)
                 .setDefaultRequestConfig(org.apache.hc.client5.http.config.RequestConfig.custom()
                         .setConnectionKeepAlive(TimeValue.ofMilliseconds(keepAliveDuration))
                         .setRedirectsEnabled(true)
-                        .setConnectionRequestTimeout(Timeout.ofMilliseconds(writeTimeout))
-                        .setResponseTimeout(readTimeout, TimeUnit.MILLISECONDS)
+                        .setConnectionRequestTimeout(Timeout.ofMilliseconds(1000)) // Set the timeout to obtain a connection from the pool
+                        .setResponseTimeout(readTimeout, TimeUnit.MILLISECONDS) // Set the maximum response time from the server
                         .build())
                 .build();
     }
@@ -98,6 +119,7 @@ public class HttpClientAutoConfiguration {
         } else {
             restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory(apacheHttpClient));
         }
+        // Set global interceptors for RestTemplate
         restTemplate.setInterceptors(Collections.singletonList(globalRequestInterceptor));
         return restTemplate;
     }
@@ -123,19 +145,30 @@ public class HttpClientAutoConfiguration {
     @ConditionalOnMissingBean
     public ClientHttpRequestInterceptor globalRequestInterceptor() {
         return (request, body, execution) -> {
-            request.getHeaders().add("Content-Type", "application/json");
+            // Handle and add additional headers to the request
+            RequestHeadersHandler.handleHeaders(additionalHeaders);
+            if (!additionalHeaders.isEmpty()) {
+                additionalHeaders.keySet().forEach(it -> {
+                    request.getHeaders().add(it, additionalHeaders.get(it));
+                });
+            }
             // Add additional authentication or other information here
             return execution.execute(request, body);
         };
     }
 
+    // Request interceptor for Feign client
     @Bean
     @ConditionalOnMissingBean
     public RequestInterceptor feignRequestInterceptor() {
         return template -> {
-            // Set global headers
-            template.header("Content-Type", "application/json");
-            // Add additional authentication or other information here
+            // Handle and set headers for Feign requests
+            RequestHeadersHandler.handleHeaders(additionalHeaders);
+            if (!additionalHeaders.isEmpty()) {
+                additionalHeaders.keySet().forEach(it -> {
+                    template.header(it, additionalHeaders.get(it));
+                });
+            }
         };
     }
 }
