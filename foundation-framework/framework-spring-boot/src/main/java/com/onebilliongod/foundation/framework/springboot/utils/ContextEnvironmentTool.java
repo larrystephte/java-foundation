@@ -20,6 +20,8 @@ public final class ContextEnvironmentTool {
     public static final String PROFILE = "profile";
     public static final String CLOUD = "cloud";
 
+    public static final String GROUP = "group";
+
     /**
      * Retrieves the current profile from the environment.
      * <p>
@@ -39,9 +41,7 @@ public final class ContextEnvironmentTool {
             source = profiles.length > 0 ? profiles[profiles.length - 1] : DEFAULT_GROUP_NAME; // Default to "default" if no profiles found
         }
 
-        // Split the profile into environment and group components
-        final String[] strings = StringUtils.split(source, "-", 2);
-        return strings[0]; // Return the environment part
+        return source; // Return the environment part
     }
 
     /**
@@ -53,28 +53,12 @@ public final class ContextEnvironmentTool {
      * @return
      */
     public static String group(final Environment environment) {
-        //Attempt to retrieve the service group from the configuration property "foundation.service.group"
-        final String group = environment.getProperty("foundation.service.group");
+        //Attempt to retrieve the service group from the configuration property "group"
+        final String group = environment.getProperty(GROUP);
         if (StringUtils.isNotBlank(group)) {
             return group;
         }
-        String profile = environment.getProperty(PROFILE);
-        if (StringUtils.isBlank(profile)) {
-            String[] profiles = environment.getActiveProfiles();
-            if (profiles == null || profiles.length < 1) {
-                return DEFAULT_GROUP_NAME;
-            } else {
-                profile = profiles[0];
-            }
-        }
-
-        // The active profile is expected to follow the structure: ${env}-${group}
-        final String[] strings = StringUtils.split(profile, "-",2);
-        if (strings == null || strings.length != 2) {
-            return DEFAULT_GROUP_NAME;
-        }
-
-        return strings[1];
+        return DEFAULT_GROUP_NAME;
     }
 
     // Gets active profiles or defaults if none are active
