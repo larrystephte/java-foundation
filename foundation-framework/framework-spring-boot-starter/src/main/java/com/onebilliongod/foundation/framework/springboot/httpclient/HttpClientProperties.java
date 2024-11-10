@@ -3,15 +3,14 @@ package com.onebilliongod.foundation.framework.springboot.httpclient;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
+import org.springframework.context.annotation.Configuration;
 import java.util.Map;
 
-@Component
+@Configuration
 @ConfigurationProperties(prefix = "http.client")
 @Getter
 @Setter
-public final class CommonHttpClientConfiguration {
+public class HttpClientProperties {
     // Configuration properties
     // Whether to use OkHttp client,the other client is httpClients
     private boolean useOkHttp = true;

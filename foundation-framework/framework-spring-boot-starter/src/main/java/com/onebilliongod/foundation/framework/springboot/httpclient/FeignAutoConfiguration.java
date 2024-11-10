@@ -7,20 +7,28 @@ import okhttp3.OkHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
 
 @Configuration
 @ConditionalOnClass(Feign.class)
-public class FeignConfiguration {
+@EnableConfigurationProperties({HttpClientProperties.class})
+public class FeignAutoConfiguration {
+    private final HttpClientProperties commonConfig;
+
+    public FeignAutoConfiguration(HttpClientProperties commonConfig) {
+        this.commonConfig = commonConfig;
+    }
+
+    // Feign client configuration
     @Bean
     @ConditionalOnMissingBean
     public Feign.Builder feignBuilder(@Nullable OkHttpClient okHttpClient,
                                       @Nullable CloseableHttpClient apacheHttpClient,
                                       RequestInterceptor feignRequestInterceptor) {
-        if (useOkHttp) {
+        if (commonConfig.isUseOkHttp()) {
             return Feign.builder().client((Client) okHttpClient)
                     .requestInterceptor(feignRequestInterceptor);
         } else {
@@ -35,10 +43,10 @@ public class FeignConfiguration {
     public RequestInterceptor feignRequestInterceptor() {
         return template -> {
             // Handle and set headers for Feign requests
-            RequestHeadersHandler.handleHeaders(additionalHeaders);
-            if (!additionalHeaders.isEmpty()) {
-                additionalHeaders.keySet().forEach(it -> {
-                    template.header(it, additionalHeaders.get(it));
+            RequestHeadersHandler.handleHeaders(commonConfig.getAdditionalHeaders());
+            if (!commonConfig.getAdditionalHeaders().isEmpty()) {
+                commonConfig.getAdditionalHeaders().keySet().forEach(it -> {
+                    template.header(it, commonConfig.getAdditionalHeaders().get(it));
                 });
             }
         };
