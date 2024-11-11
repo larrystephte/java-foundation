@@ -1,8 +1,9 @@
 package com.onebilliongod.foundation.framework.springboot.httpclient;
 
-import feign.Feign;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -16,9 +17,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
-@Configuration
-@ConditionalOnClass(Feign.class)
+@AutoConfiguration
+@ConditionalOnClass(RestTemplate.class)
 @EnableConfigurationProperties({HttpClientProperties.class})
+@Slf4j
 public class RestTemplateAutoConfiguration {
     private final HttpClientProperties commonConfig;
 
@@ -29,10 +31,11 @@ public class RestTemplateAutoConfiguration {
     // RestTemplate configuration with conditional selection between OkHttp and Apache
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(RestTemplate.class)
+//    @ConditionalOnClass(RestTemplate.class)
     public RestTemplate restTemplate(@Nullable OkHttpClient okHttpClient,
                                      @Nullable CloseableHttpClient apacheHttpClient,
                                      ClientHttpRequestInterceptor globalRequestInterceptor) {
+        log.info("restTemplate init:globalRequestInterceptor,{}", globalRequestInterceptor);
         RestTemplate restTemplate;
         if (commonConfig.isUseOkHttp()) {
             restTemplate = new RestTemplate(new OkHttp3ClientHttpRequestFactory(okHttpClient));
@@ -47,8 +50,9 @@ public class RestTemplateAutoConfiguration {
     // Global Request Interceptor for Feign and RestTemplate
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(RestTemplate.class)
+//    @ConditionalOnClass(RestTemplate.class)
     public ClientHttpRequestInterceptor globalRequestInterceptor() {
+        log.info("ClientHttpRequestInterceptor init");
         return (request, body, execution) -> {
             // Handle and add additional headers to the request
             RequestHeadersHandler.handleHeaders(commonConfig.getAdditionalHeaders());

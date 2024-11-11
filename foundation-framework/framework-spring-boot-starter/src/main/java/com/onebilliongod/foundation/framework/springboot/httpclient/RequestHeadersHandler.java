@@ -2,11 +2,13 @@ package com.onebilliongod.foundation.framework.springboot.httpclient;
 
 import com.onebilliongod.foundation.commons.core.common.Constants;
 import com.onebilliongod.foundation.commons.core.net.NetworkUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class RequestHeadersHandler {
     private static final String HTTP_HEADER_PREFIX = "X-Foundation-";
     private static final String HTTP_HEADER_ORIGIN_PREFIX = HTTP_HEADER_PREFIX + "Origin-";
@@ -27,6 +29,7 @@ public class RequestHeadersHandler {
     private static final String HTTP_HEADER_REQUEST_TYPE = HTTP_HEADER_PREFIX + "Request-Type";
 
     public static void handleHeaders(Map<String, String> additionalHeaders) {
+        log.info("handle Headers");
         if (additionalHeaders == null) {
             additionalHeaders = new HashMap<>();
         }
@@ -34,34 +37,45 @@ public class RequestHeadersHandler {
         //add project
         String project = System.getProperty(Constants.PROJECT);
         additionalHeaders.put(HTTP_HEADER_PROJECT, project);
+        log.info("handle Headers,project:{}", project);
 
         //add cloud
         String cloud = System.getProperty(Constants.CLOUD);
         additionalHeaders.put(HTTP_HEADER_CLOUD, cloud);
+        log.info("handle Headers,cloud:{}", cloud);
 
         //add group
         String group = System.getProperty(Constants.GROUP);
         additionalHeaders.put(HTTP_HEADER_GROUP, group);
+        log.info("handle Headers,group:{}", group);
 
         //add ip
         additionalHeaders.put(HTTP_HEADER_ADDRESS, NetworkUtils.getLocalIp());
+        log.info("handle Headers,ip:{}", NetworkUtils.getLocalIp());
 
         //add mdc info
         String requestId = MDC.get(Constants.MDC_REQUEST_ID);
         if (requestId != null) {
             additionalHeaders.put(HTTP_HEADER_REQUEST_ID, requestId);
         }
+        log.info("handle Headers,requestId:{}", requestId);
+
         String requestSequence = MDC.get(Constants.MDC_REQUEST_SEQUENCE);
         if (requestSequence != null) {
             additionalHeaders.put(HTTP_HEADER_REQUEST_SEQUENCE, requestSequence);
         }
+        log.info("handle Headers,requestSequence:{}", requestSequence);
+
         String invokeLink = MDC.get(Constants.MDC_INVOKE_LINK);
         if (invokeLink != null) {
             additionalHeaders.put(HTTP_HEADER_INVOKE_LINK, invokeLink);
         }
+        log.info("handle Headers,invokeLink:{}", invokeLink);
+
         String requestType = MDC.get(Constants.MDC_REQUEST_TYPE);
         if (requestType != null) {
             additionalHeaders.put(HTTP_HEADER_REQUEST_TYPE, requestType);
         }
+        log.info("handle Headers,requestType:{}", requestType);
     }
 }

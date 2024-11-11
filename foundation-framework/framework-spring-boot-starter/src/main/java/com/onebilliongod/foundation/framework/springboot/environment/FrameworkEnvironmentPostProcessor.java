@@ -59,6 +59,8 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
     }
 
     private Map<String, Object> predefinedProperties(final ConfigurableEnvironment environment) {
+        PropertySourcesPropertyResolver resolver = new PropertySourcesPropertyResolver(environment.getPropertySources());
+
         //resolve localIp
         Map<String, Object> predefinedVariables  = new HashMap<>();
         String localIp = NetworkUtils.getLocalIp();
@@ -74,7 +76,7 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
         }
         predefinedVariables.put("hostName", hostName);
         System.setProperty("hostName", hostName);
-        String k8sHostName = environment.getProperty("HOSTNAME");
+        String k8sHostName = resolver.getProperty("HOSTNAME");
         if (StringUtils.isBlank(k8sHostName)) {
             k8sHostName = hostName;
         }
@@ -92,7 +94,7 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
         System.setProperty(Constants.GROUP, group);
 
         //check the  applicationName
-        String applicationName = environment.getProperty("spring.application.name");
+        String applicationName = resolver.getProperty("spring.application.name");
         if (StringUtils.isBlank(applicationName)) {
             throw new IllegalArgumentException("Please configure spring.application.name");
         }
@@ -105,7 +107,7 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
         predefinedVariables.put(Constants.CLOUD, applicationName);
 
         //resolve the  k8sNamespace
-        String k8sNamespace = environment.getProperty("K8S_NAMESPACE");
+        String k8sNamespace = resolver.getProperty("K8S_NAMESPACE");
         if (StringUtils.isBlank(k8sNamespace)) {
             k8sNamespace = K8SUtil.podOfNamespace("default");
         }

@@ -10,6 +10,7 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.core5.util.TimeValue;
 import org.apache.hc.core5.util.Timeout;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -20,10 +21,8 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 
-@Configuration
-@EnableAutoConfiguration
+@AutoConfiguration
 @EnableConfigurationProperties({HttpClientProperties.class})
-//@ConfigurationProperties(prefix = "http.client")
 public class HttpClientAutoConfiguration {
     private final HttpClientProperties commonConfig;
 

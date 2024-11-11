@@ -1,3 +1,9 @@
+spring:
+  application:
+    name: testFoundation
 http:
   client:
     useOkHttp: false
+    additionalHeaders:
+      key1: value1
+      key2: value2

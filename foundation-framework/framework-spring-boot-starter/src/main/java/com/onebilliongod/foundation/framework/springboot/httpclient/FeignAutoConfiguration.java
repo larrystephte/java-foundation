@@ -5,14 +5,16 @@ import feign.Feign;
 import feign.RequestInterceptor;
 import okhttp3.OkHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.lang.Nullable;
 
-@Configuration
+@AutoConfiguration
 @ConditionalOnClass(Feign.class)
 @EnableConfigurationProperties({HttpClientProperties.class})
 public class FeignAutoConfiguration {
@@ -24,6 +26,7 @@ public class FeignAutoConfiguration {
 
     // Feign client configuration
     @Bean
+    @Primary
     @ConditionalOnMissingBean
     public Feign.Builder feignBuilder(@Nullable OkHttpClient okHttpClient,
                                       @Nullable CloseableHttpClient apacheHttpClient,
