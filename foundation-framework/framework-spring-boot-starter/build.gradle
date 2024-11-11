@@ -18,8 +18,8 @@ dependencies {
     implementation project(path: ':foundation-framework:framework-spring-boot')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework:spring-web:6.0.23'
-//    testImplementation 'io.github.openfeign:feign-core:13.3'
-//    testImplementation 'io.github.openfeign:feign-okhttp:13.3'
-//    testImplementation 'io.github.openfeign:feign-httpclient:13.3'
+    testImplementation 'io.github.openfeign:feign-core:13.3'
+    testImplementation 'io.github.openfeign:feign-okhttp:13.3'
+    testImplementation 'io.github.openfeign:feign-httpclient:13.3'
 
 }
