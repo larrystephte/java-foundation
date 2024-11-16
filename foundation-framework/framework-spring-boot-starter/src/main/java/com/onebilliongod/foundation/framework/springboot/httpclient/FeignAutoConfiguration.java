@@ -3,6 +3,7 @@ package com.onebilliongod.foundation.framework.springboot.httpclient;
 import feign.Client;
 import feign.Feign;
 import feign.RequestInterceptor;
+import feign.hc5.ApacheHttp5Client;
 import okhttp3.OkHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -32,10 +33,10 @@ public class FeignAutoConfiguration {
                                       @Nullable CloseableHttpClient apacheHttpClient,
                                       RequestInterceptor feignRequestInterceptor) {
         if (commonConfig.isUseOkHttp()) {
-            return Feign.builder().client((Client) okHttpClient)
+            return Feign.builder().client(new feign.okhttp.OkHttpClient(okHttpClient))
                     .requestInterceptor(feignRequestInterceptor);
         } else {
-            return Feign.builder().client((Client) apacheHttpClient)
+            return Feign.builder().client(new ApacheHttp5Client(apacheHttpClient))
                     .requestInterceptor(feignRequestInterceptor);
         }
     }

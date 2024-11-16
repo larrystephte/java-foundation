@@ -14,7 +14,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class HttpClientAutoConfigurationContextTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(HttpClientAutoConfiguration.class,
-                    RestTemplateAutoConfiguration.class));
+                    FeignAutoConfiguration.class));
 
     @Test
     void httpClientShouldBeConfiguredWithProperties() {
@@ -59,6 +59,7 @@ public class HttpClientAutoConfigurationContextTest {
             assertThat(context).hasSingleBean(Feign.Builder.class);
 
             Feign.Builder feignBuild = context.getBean(Feign.Builder.class);
+            assertThat(feignBuild).isNotNull();
         });
     }
 }
