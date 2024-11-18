@@ -45,14 +45,6 @@ public class FeignAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public RequestInterceptor feignRequestInterceptor() {
-        return template -> {
-            // Handle and set headers for Feign requests
-            RequestHeadersHandler.handleHeaders(commonConfig.getAdditionalHeaders());
-            if (!commonConfig.getAdditionalHeaders().isEmpty()) {
-                commonConfig.getAdditionalHeaders().keySet().forEach(it -> {
-                    template.header(it, commonConfig.getAdditionalHeaders().get(it));
-                });
-            }
-        };
+        return new RequestHeadersHandler(commonConfig.getAdditionalHeaders());
     }
 }

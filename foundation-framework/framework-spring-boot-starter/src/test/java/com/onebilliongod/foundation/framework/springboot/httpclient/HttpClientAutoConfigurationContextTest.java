@@ -14,11 +14,12 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class HttpClientAutoConfigurationContextTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(HttpClientAutoConfiguration.class,
+                    RestTemplateAutoConfiguration.class,
                     FeignAutoConfiguration.class));
 
     @Test
     void httpClientShouldBeConfiguredWithProperties() {
-        this.contextRunner.withPropertyValues("http.client.useOkHttp=false").run((context) -> {
+        this.contextRunner.withPropertyValues("http.client.useOkHttp=true").run((context) -> {
             // Verify that httpClient exists
             assertThat(context).hasSingleBean(OkHttpClient.class);
 //            HttpClient httpClient = context.getBean(HttpClient.class);

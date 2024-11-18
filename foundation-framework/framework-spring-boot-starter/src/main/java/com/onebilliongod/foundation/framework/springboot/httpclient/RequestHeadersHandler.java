@@ -2,14 +2,22 @@ package com.onebilliongod.foundation.framework.springboot.httpclient;
 
 import com.onebilliongod.foundation.commons.core.common.Constants;
 import com.onebilliongod.foundation.commons.core.net.NetworkUtils;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.client.ClientHttpRequestExecution;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.ClientHttpResponse;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class RequestHeadersHandler {
+public class RequestHeadersHandler implements ClientHttpRequestInterceptor, RequestInterceptor {
     private static final String HTTP_HEADER_PREFIX = "X-Foundation-";
     private static final String HTTP_HEADER_ORIGIN_PREFIX = HTTP_HEADER_PREFIX + "Origin-";
     private static final String HTTP_HEADER_PROJECT = HTTP_HEADER_ORIGIN_PREFIX + "Project";
@@ -28,7 +36,13 @@ public class RequestHeadersHandler {
 
     private static final String HTTP_HEADER_REQUEST_TYPE = HTTP_HEADER_PREFIX + "Request-Type";
 
-    public static void handleHeaders(Map<String, String> additionalHeaders) {
+    private Map<String, String> additionalHeaders;
+
+    public RequestHeadersHandler(Map<String, String> additionalHeaders) {
+        this.additionalHeaders = additionalHeaders;
+    }
+
+    public void handleHeaders() {
         log.info("handle Headers");
         if (additionalHeaders == null) {
             additionalHeaders = new HashMap<>();
@@ -77,5 +91,23 @@ public class RequestHeadersHandler {
             additionalHeaders.put(HTTP_HEADER_REQUEST_TYPE, requestType);
         }
         log.info("handle Headers,requestType:{}", requestType);
+    }
+
+    @NotNull
+    @Override
+    public ClientHttpResponse intercept(@NotNull HttpRequest request, @NotNull byte[] body, ClientHttpRequestExecution execution) throws IOException {
+        handleHeaders();
+        additionalHeaders.keySet().forEach(it -> {
+            request.getHeaders().add(it, additionalHeaders.get(it));
+        });
+        return execution.execute(request, body);
+    }
+
+    @Override
+    public void apply(RequestTemplate template) {
+        handleHeaders();
+        additionalHeaders.keySet().forEach(it -> {
+            template.header(it, additionalHeaders.get(it));
+        });
     }
 }
