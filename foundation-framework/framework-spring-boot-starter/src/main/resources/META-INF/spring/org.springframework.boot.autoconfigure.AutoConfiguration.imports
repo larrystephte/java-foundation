@@ -1,1 +1,3 @@
 com.onebilliongod.foundation.framework.springboot.httpclient.RestTemplateAutoConfiguration
+com.onebilliongod.foundation.framework.springboot.httpclient.HttpClientAutoConfiguration
+com.onebilliongod.foundation.framework.springboot.httpclient.FeignAutoConfiguration

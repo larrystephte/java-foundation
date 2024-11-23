@@ -77,8 +77,12 @@ management:
         http: 5s # Sets the maximum expected response time for HTTP requests to 5 seconds, also used in histogram calculations.
       percentiles-histogram:
         http: true #Enables histogram-based metrics for HTTP request percentiles, providing a detailed distribution of HTTP response times.
+    binders:
+      jvm: true
+      system: true
     export:
       prometheus:
+#        enabled: true
         descriptions: false #Disables metric descriptions for Prometheus exports to save bandwidth and reduce payload size.
         step: 15s #Sets the interval at which Prometheus metrics are exported to 15 seconds.
     web:
