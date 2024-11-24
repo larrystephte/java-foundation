@@ -2,6 +2,7 @@ package com.onebilliongod.foundation.framework.springboot.monitoring;
 
 import io.micrometer.elastic.ElasticConfig;
 import io.micrometer.influx.InfluxConfig;
+import io.micrometer.prometheusmetrics.PrometheusConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,10 +25,16 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MetricsExportConfig {
     @Bean
-    @ConfigurationProperties("management.metrics.export.elastic")
-    public ElasticConfig elasticConfig() {
+    @ConfigurationProperties("management.metrics.export.prometheus")
+    public PrometheusConfig prometheusConfig() {
         return key -> null;
     }
+
+//    @Bean
+//    @ConfigurationProperties("management.metrics.export.elastic")
+//    public ElasticConfig elasticConfig() {
+//        return key -> null;
+//    }
 
     @Bean
     @ConfigurationProperties("management.metrics.export.influx")

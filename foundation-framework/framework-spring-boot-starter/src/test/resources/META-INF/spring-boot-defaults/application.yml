@@ -83,7 +83,6 @@ management:
     export:
       enable: true
       prometheus:
-        enable: true
         descriptions: false #Disables metric descriptions for Prometheus exports to save bandwidth and reduce payload size.
         step: 15s #Sets the interval at which Prometheus metrics are exported to 15 seconds.
     web:
