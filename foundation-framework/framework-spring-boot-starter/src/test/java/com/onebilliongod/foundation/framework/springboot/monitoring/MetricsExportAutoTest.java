@@ -1,14 +1,9 @@
 package com.onebilliongod.foundation.framework.springboot.monitoring;
 
-import com.onebilliongod.foundation.framework.springboot.httpclient.FeignAutoConfiguration;
-import com.onebilliongod.foundation.framework.springboot.httpclient.HttpClientAutoConfiguration;
-import com.onebilliongod.foundation.framework.springboot.httpclient.RestTemplateAutoConfiguration;
-import io.micrometer.elastic.ElasticConfig;
+
 import io.micrometer.elastic.ElasticMeterRegistry;
 import io.micrometer.influx.InfluxMeterRegistry;
-import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
-import okhttp3.OkHttpClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration;
@@ -20,12 +15,11 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 public class MetricsExportAutoTest {
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withClassLoader(new FilteredClassLoader(
-//                    ElasticMeterRegistry.class,
-                    InfluxMeterRegistry.class,
+                    ElasticMeterRegistry.class,
+//                    InfluxMeterRegistry.class,
                     PrometheusMeterRegistry.class
             ))
-            .withConfiguration(AutoConfigurations.of(MetricsExportConfig.class,
-                    MetricsExportAutoConfiguration.class,
+            .withConfiguration(AutoConfigurations.of(MetricsExportAutoConfiguration.class,
                     ConfigurationPropertiesAutoConfiguration.class
               ))
 //            .withBean(PrometheusMeterRegistry.class, () -> new PrometheusMeterRegistry(PrometheusConfig.DEFAULT))
@@ -43,12 +37,21 @@ public class MetricsExportAutoTest {
 
     @Test
     public void testElasticMeterRegistry() {
-        //TODO test some config
         this.contextRunner.withPropertyValues("management.metrics.export.elastic.host=http://my-elastic:9200").run((context) -> {
             assertThat(context).hasSingleBean(ElasticMeterRegistry.class);
 
-            ElasticConfig e = context.getBean(ElasticConfig.class);
+            ElasticProperties e = context.getBean(ElasticProperties.class);
             assertThat(e.host()).isEqualTo("http://my-elastic:9200");
+        });
+    }
+
+    @Test
+    public void testInfluxMeterRegistry() {
+        this.contextRunner.withPropertyValues("management.metrics.export.influx.uri=http://my-influxdb:8086").run((context) -> {
+            assertThat(context).hasSingleBean(InfluxMeterRegistry.class);
+
+            InfluxProperties e = context.getBean(InfluxProperties.class);
+            assertThat(e.uri()).isEqualTo("http://my-influxdb:8086");
         });
     }
 

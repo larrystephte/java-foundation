@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation 'io.opentelemetry:opentelemetry-sdk:1.42.1'
+    implementation 'io.opentelemetry:opentelemetry-api:1.42.1'
+
+    implementation 'io.opentelemetry:opentelemetry-exporter-prometheus:1.42.1'
+    compileOnly 'io.opentelemetry:opentelemetry-exporter-jaeger:1.42.1'
+    compileOnly 'io.opentelemetry:opentelemetry-exporter-logging:1.42.1'
+}

@@ -13,8 +13,9 @@ include 'foundation-commons:commons-core'
 include 'foundation-framework'
 include 'foundation-framework:framework-spring-boot'
 include 'foundation-framework:framework-spring-boot-starter'
+include 'foundation-framework:framework-spring-cloud-starter'
+
 
 include 'foundation-initializr'
-
 
 

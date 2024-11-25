@@ -1,12 +1,17 @@
 package com.onebilliongod.foundation.framework.springboot.monitoring;
 
 import io.micrometer.elastic.ElasticConfig;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import static io.micrometer.core.instrument.config.validate.PropertyValidator.getString;
-
+/**
+ * management:
+ *   metrics:
+ *     export:
+ *       elastic:
+ *         host: http://my-elastic:9200
+ *         index: custom-metrics
+ *         step: 5s
+ */
 @ConfigurationProperties(prefix = "management.metrics.export.elastic")
 public class ElasticProperties implements ElasticConfig {
     private String host;
@@ -15,22 +20,7 @@ public class ElasticProperties implements ElasticConfig {
     private String password;
     private String step;
 
-    @NotNull
-    @Override
-    public String host() {
-        return host;
-    }
-
-    @Override
-    @NotNull
-    public String index() {
-        return index;
-    }
-
-    @Override
-    public String userName() {
-        return userName;
-    }
+    private String apiKeyCredentials;
 
     public void setIndex(String index) {
         this.index = index;
@@ -52,8 +42,25 @@ public class ElasticProperties implements ElasticConfig {
         this.host = host;
     }
 
+    public void setApiKeyCredentials(String apiKeyCredentials) {
+        this.apiKeyCredentials = apiKeyCredentials;
+    }
+
     @Override
     public String get(String key) {
+        if (key.equals(this.prefix() + ".host")) {
+            return host;
+        } else if (key.equals(this.prefix() + ".index")) {
+            return index;
+        } else if (key.equals(this.prefix() + ".userName")) {
+            return userName;
+        } else if (key.equals(this.prefix() + ".password")) {
+            return password;
+        } else if (key.equals(this.prefix() + ".step")) {
+            return step;
+        } else if (key.equals(this.prefix() + ".apiKeyCredentials")) {
+            return apiKeyCredentials;
+        }
         return null;
     }
 }
