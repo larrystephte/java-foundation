@@ -61,58 +61,14 @@ public class FrameworkEnvironmentPostProcessor implements EnvironmentPostProcess
     private Map<String, Object> predefinedProperties(final ConfigurableEnvironment environment) {
         PropertySourcesPropertyResolver resolver = new PropertySourcesPropertyResolver(environment.getPropertySources());
 
-        //resolve localIp
         Map<String, Object> predefinedVariables  = new HashMap<>();
-        String localIp = NetworkUtils.getLocalIp();
-        if (localIp == null) {
-            throw new IllegalStateException("The framework could not resolve the local IP address (IPv4). Please review the hosts configuration!");
-        }
-        predefinedVariables.put("localIp", localIp);
-
-        //resolve hostName
-        String hostName = NetworkUtils.getHostName();
-        if (hostName == null) {
-            throw new IllegalStateException("The framework could not resolve the local hostname. Please review the hosts configuration!");
-        }
-        predefinedVariables.put("hostName", hostName);
-        System.setProperty("hostName", hostName);
-        String k8sHostName = resolver.getProperty("HOSTNAME");
-        if (StringUtils.isBlank(k8sHostName)) {
-            k8sHostName = hostName;
-        }
-        System.setProperty("HOSTNAME", k8sHostName);
-        predefinedVariables.put("HOSTNAME", k8sHostName);
-
-        //resolve profile
-        String profile = ContextEnvironmentTool.profile(environment);
-        predefinedVariables.put(Constants.PROFILE, profile);
-        System.setProperty(Constants.PROFILE, profile);
-
-        //resolve group
-        String group = ContextEnvironmentTool.group(environment);
-        predefinedVariables.put(Constants.GROUP, group);
-        System.setProperty(Constants.GROUP, group);
 
         //check the  applicationName
         String applicationName = resolver.getProperty("spring.application.name");
         if (StringUtils.isBlank(applicationName)) {
             throw new IllegalArgumentException("Please configure spring.application.name");
         }
-        predefinedVariables.put(Constants.PROJECT, applicationName);
-        System.setProperty(Constants.PROJECT, applicationName);
 
-        //check the cloud
-        String cloud = ContextEnvironmentTool.cloud(environment);
-        System.setProperty(Constants.CLOUD, cloud);
-        predefinedVariables.put(Constants.CLOUD, applicationName);
-
-        //resolve the  k8sNamespace
-        String k8sNamespace = resolver.getProperty("K8S_NAMESPACE");
-        if (StringUtils.isBlank(k8sNamespace)) {
-            k8sNamespace = K8SUtil.podOfNamespace("default");
-        }
-        System.setProperty("K8S_NAMESPACE", k8sNamespace);
-        predefinedVariables.put("K8S_NAMESPACE", k8sNamespace);
 
         return predefinedVariables;
     }
